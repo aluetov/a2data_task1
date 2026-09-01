@@ -1,0 +1,113 @@
+name: a2data_task1
+
+services:
+  nginx:
+    image: nginx:1.31.3-alpine
+
+    container_name: a2data_task1_nginx
+
+    ports:
+      - "${NGINX_HOST_PORT}:${NGINX_PORT}"
+
+    depends_on:
+      app:
+        condition: service_healthy
+
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+    networks:
+      - frontend
+
+  app:
+    build:
+      context: .
+
+    container_name: a2data_task1_app
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+    env_file:
+      - .env
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+    networks:
+      - frontend
+      - backend
+
+  db:
+    image: postgres:18.4
+
+    container_name: a2data_task1_postgres
+
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+    volumes:
+      - db-data:/var/lib/postgresql
+
+    networks:
+      - backend
+
+  redis:
+    image: redis:8.8.1-alpine
+
+    container_name: a2data_task1_redis
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+    volumes:
+      - redis-data:/data
+
+    networks:
+      - backend
+
+networks:
+  frontend:
+    driver: bridge
+
+  backend:
+    driver: bridge
+    internal: true
+
+volumes:
+  redis-data:
+    name: redis
+
+  db-data:
+    name: postgres
