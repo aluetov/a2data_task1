@@ -23,12 +23,7 @@ services:
     build:
       context: .
 
-    container_name: a2data_task1_app
-
     depends_on:
-      db:
-        condition: service_healthy
-
       redis:
         condition: service_healthy
 
@@ -50,33 +45,6 @@ services:
 
     networks:
       - frontend
-      - backend
-
-  db:
-    image: postgres:18.4
-
-    container_name: a2data_task1_postgres
-
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
-        ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
-
-    volumes:
-      - db-data:/var/lib/postgresql
-
-    networks:
       - backend
 
   redis:
@@ -108,6 +76,3 @@ networks:
 volumes:
   redis-data:
     name: redis
-
-  db-data:
-    name: postgres
