@@ -1,7 +1,13 @@
 from redis.asyncio import Redis
+from redis.exceptions import ConnectionError as RedisConnectionError
+from redis.exceptions import TimeoutError as RedisTimeoutError
 from app.config import get_settings
+import logging
+import time
 
 settings = get_settings()
+
+logger = logging.getLogger(__name__)
 
 
 RATE_LIMIT_SCRIPT = """
@@ -35,14 +41,28 @@ async def check_limit(
     client_id: str,
 ) -> tuple[bool, int, int]:
     key = f"rate_limit:{client_id}"
+    limit = settings.rate_limit
+    window_seconds = settings.rate_limit_window_seconds
 
-    result = await redis.eval(
-        RATE_LIMIT_SCRIPT,
-        1,
-        key,
-        settings.rate_limit,
-        settings.rate_limit_window_seconds,
-    )
+    try:
+        result = await redis.eval(
+            RATE_LIMIT_SCRIPT,
+            1,
+            key,
+            limit,
+            window_seconds,
+        )
+    except (RedisConnectionError, RedisTimeoutError):
+        logger.warning(
+            "Redis unavailable; rate limiter is failing open",
+            exc_info=True,
+        )
+
+        return (
+            True,
+            limit,
+            int(time.time()) + window_seconds,
+        )
 
     allowed, remaining, reset_at = result
 

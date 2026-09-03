@@ -9,6 +9,8 @@ def create_redis(settings: Settings) -> Redis:
         host=settings.redis_host,
         port=settings.redis_port,
         decode_responses=True,
+        socket_connect_timeout=0.5,
+        socket_timeout=0.5,
     )
 
 
