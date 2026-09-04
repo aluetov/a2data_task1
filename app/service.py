@@ -23,7 +23,9 @@ end
 
 local ttl_ms = redis.call("PTTL", key)
 local current_time = redis.call("TIME")
-local reset_at = tonumber(current_time[1]) + math.ceil(ttl_ms / 1000)
+local current_time_ms = tonumber(current_time[1]) * 1000
+local current_microseconds_ms = math.floor(tonumber(current_time[2]) / 1000)
+local reset_at = math.ceil((current_time_ms + current_microseconds_ms + ttl_ms) / 1000)
 
 local allowed = 0
 

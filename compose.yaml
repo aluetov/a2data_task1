@@ -23,6 +23,9 @@ services:
     build:
       context: .
 
+    expose:
+    - "8000"
+
     depends_on:
       redis:
         condition: service_healthy
@@ -38,7 +41,7 @@ services:
           "-c",
           "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)",
         ]
-      interval: 5s
+      interval: 30s
       timeout: 5s
       retries: 10
       start_period: 10s
@@ -54,7 +57,7 @@ services:
 
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
+      interval: 30s
       timeout: 5s
       retries: 10
       start_period: 10s
@@ -75,4 +78,3 @@ networks:
 
 volumes:
   redis-data:
-    name: redis

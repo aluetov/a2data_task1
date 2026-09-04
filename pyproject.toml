@@ -1,0 +1,9 @@
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "integration: requires the Docker Compose stack",
+    "slow: waits for a real rate-limit window to expire",
+    "redis_outage: requires Redis to be stopped by the test runner",
+]
