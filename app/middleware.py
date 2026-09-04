@@ -32,8 +32,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             client_id=client_id,
         )
 
+        limit = request.app.state.settings.rate_limit
         rate_limit_headers = {
-            "X-RateLimit-Limit": "100",
+            "X-RateLimit-Limit": str(limit),
             "X-RateLimit-Remaining": str(remaining),
             "X-RateLimit-Reset": str(reset_at),
         }

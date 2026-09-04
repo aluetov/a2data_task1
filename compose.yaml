@@ -7,7 +7,7 @@ services:
     container_name: a2data_task1_nginx
 
     ports:
-      - "${NGINX_HOST_PORT}:${NGINX_PORT}"
+      - "${NGINX_HOST_PORT:-8000}:80"
 
     depends_on:
       app:
@@ -30,8 +30,11 @@ services:
       redis:
         condition: service_healthy
 
-    env_file:
-      - .env
+    environment:
+      REDIS_HOST: "${REDIS_HOST:-redis}"
+      REDIS_PORT: "${REDIS_PORT:-6379}"
+      RATE_LIMIT: "${RATE_LIMIT:-100}"
+      RATE_LIMIT_WINDOW_SECONDS: "${RATE_LIMIT_WINDOW_SECONDS:-60}"
 
     healthcheck:
       test:
